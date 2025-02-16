@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrubmeta</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --background-color: #f5f7fa;
+            --text-color: #2c3e50;
+            --border-color: #e1e8ed;
+            --hover-color: #357abd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #357abd);
+            color: white;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0;
+            padding: 1rem 2rem;
+        }
+
+        .nav-bar {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 2rem;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+
+        .nav-link.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link.disabled:hover {
+            background-color: transparent;
+        }
+
+        .coming-soon-tag {
+            font-size: 0.7rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: 2rem;
+        }
+
+        .checkbox-group {
+            margin: 1.5rem 0;
+        }
+
+        .checkbox-group h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .description-text {
+            color: #666;
+            line-height: 1.6;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .platform-checkbox {
+            display: flex;
+            align-items: center;
+            margin: 0.8rem 0;
+        }
+
+        .platform-checkbox.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .platform-checkbox.disabled label {
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        .future-integration {
+            font-size: 0.85rem;
+            color: #666;
+            margin-left: 0.5rem;
+            font-style: italic;
+        }
+
+        .platform-checkbox input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .platform-checkbox.disabled input[type="checkbox"] {
+            cursor: not-allowed;
+        }
+
+        .platform-checkbox label {
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .platform-input {
+            margin: 1rem 0;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .platform-input.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"].error {
+            border-color: #e74c3c;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .submit-button:hover {
+            background-color: var(--hover-color);
+        }
+
+        .submit-button:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .results-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .results-container.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tweet {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tweet-text {
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+        }
+
+        .tweet-metadata {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .tweet-date {
+            color: #666;
+        }
+
+        .sensitivity-tag {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .sensitivity-tag.sensitive {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .sensitivity-tag.safe {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .error-alert {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .auth-required-message {
+            background-color: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #e65100;
+        }
+
+        .auth-required-message p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .success-message {
+            background-color: #e8f5e9;
+            border: 1px solid #81c784;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #2e7d32;
+            display: none;
+        }
+
+        .success-message.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Scrubmeta</h1>
+        </div>
+        <nav class="nav-bar">
+            <div class="nav-content">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/lookup" class="nav-link active">Social Media History Lookup</a>
+                <span class="nav-link disabled">
+                    Social Media Deletion
+                    <span class="coming-soon-tag">Coming Soon</span>
+                </span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="checkbox-group">
+                <h3>Select platform to investigate user</h3>
+                <p class="description-text">
+                    Below, you can look up any user on the available social media platforms and view their historical public activity. 
+                    Posts containing potentially harmful content have been placed at the top and are marked appropriately.
+                </p>
+                <div class="platform-checkbox disabled">
+                    <input type="checkbox" id="instagram" name="platform" value="instagram" disabled>
+                    <label for="instagram">Instagram</label>
+                    <span class="future-integration">This platform will be integrated in the future</span>
+                </div>
+                <div class="platform-checkbox disabled">
+                    <input type="checkbox" id="facebook" name="platform" value="facebook" disabled>
+                    <label for="facebook">Facebook</label>
+                    <span class="future-integration">This platform will be integrated in the future</span>
+                </div>
+                <div class="platform-checkbox">
+                    <input type="checkbox" id="x" name="platform" value="x" onchange="toggleInput('x')">
+                    <label for="x">X</label>
+                </div>
+            </div>
+
+            <div id="username-inputs">
+                <div id="instagram-input" class="platform-input">
+                    <label for="instagram-username">Instagram Username</label>
+                    <input type="text" id="instagram-username" name="instagram-username" placeholder="Enter your Instagram username">
+                    <div class="error-message">Please enter your Instagram username</div>
+                </div>
+
+                <div id="facebook-input" class="platform-input">
+                    <label for="facebook-username">Facebook Username</label>
+                    <input type="text" id="facebook-username" name="facebook-username" placeholder="Enter your Facebook username">
+                    <div class="error-message">Please enter your Facebook username</div>
+                </div>
+
+                <div id="x-input" class="platform-input">
+                    <label for="x-username">X Username</label>
+                    <input type="text" id="x-username" name="x-username" placeholder="Enter your X username">
+                    <div class="error-message">Please enter your X username</div>
+                </div>
+
+                <button id="submit-button" class="submit-button" onclick="handleSubmit()">
+                    See historical online activity
+                </button>
+
+                <div id="error-message" class="error-alert"></div>
+                
+                <div id="success-message" class="success-message"></div>
+                <div id="results-container" class="results-container">
+                    <h3>Historical Activity</h3>
+                    <div id="tweets-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleInput(platform) {
+            const inputDiv = document.getElementById(`${platform}-input`);
+            const checkbox = document.querySelector(`input[value="${platform}"]`);
+            if (checkbox.checked) {
+                inputDiv.style.display = 'block';
+                inputDiv.classList.add('visible');
+            } else {
+                inputDiv.classList.remove('visible');
+                setTimeout(() => {
+                    if (!checkbox.checked) {
+                        inputDiv.style.display = 'none';
+                    }
+                }, 300);
+            }
+            // Clear validation states when toggling
+            const input = document.getElementById(`${platform}-username`);
+            input.classList.remove('error');
+            inputDiv.querySelector('.error-message').style.display = 'none';
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const platforms = ['x']; // Only check X since others are disabled
+            
+            // Reset all error states
+            platforms.forEach(platform => {
+                const input = document.getElementById(`${platform}-username`);
+                const errorMessage = document.querySelector(`#${platform}-input .error-message`);
+                input.classList.remove('error');
+                errorMessage.style.display = 'none';
+            });
+
+            // Check each selected platform
+            platforms.forEach(platform => {
+                const checkbox = document.querySelector(`input[value="${platform}"]`);
+                if (checkbox.checked) {
+                    const input = document.getElementById(`${platform}-username`);
+                    const errorMessage = document.querySelector(`#${platform}-input .error-message`);
+                    
+                    if (!input.value.trim()) {
+                        input.classList.add('error');
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
+        async function handleSubmit() {
+            if (validateForm()) {
+                const submitButton = document.getElementById('submit-button');
+                const errorMessage = document.getElementById('error-message');
+                const resultsContainer = document.getElementById('results-container');
+                const successMessage = document.getElementById('success-message');
+                
+                // Disable button and hide previous results/errors
+                submitButton.disabled = true;
+                errorMessage.style.display = 'none';
+                resultsContainer.classList.remove('visible');
+                successMessage.classList.remove('visible');
+                
+                // Collect the data from selected platforms
+                const data = {};
+                ['x'].forEach(platform => {
+                    const checkbox = document.querySelector(`input[value="${platform}"]`);
+                    if (checkbox.checked) {
+                        data[platform] = document.getElementById(`${platform}-username`).value.trim();
+                    }
+                });
+                
+                try {
+                    const response = await fetch('/api/fetch-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        errorMessage.textContent = errorData.error;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.x_data && result.x_data.data) {
+                        const tweetsContainer = document.getElementById('tweets-container');
+                        tweetsContainer.innerHTML = ''; // Clear previous results
+                        
+                        // Show CSV success message if file was created
+                        if (result.csv_file) {
+                            successMessage.textContent = `Tweets have been saved to CSV file`;
+                            successMessage.classList.add('visible');
+                        } else {
+                            successMessage.classList.remove('visible');
+                        }
+                        
+                        // Sort tweets: sensitive ones first, then others
+                        const sortedTweets = [...result.x_data.data].sort((a, b) => {
+                            if (a.possibly_sensitive && !b.possibly_sensitive) return -1;
+                            if (!a.possibly_sensitive && b.possibly_sensitive) return 1;
+                            return new Date(b.created_at) - new Date(a.created_at); // Secondary sort by date
+                        });
+
+                        // Add a separator if there are sensitive tweets
+                        let hasAddedSeparator = false;
+                        
+                        sortedTweets.forEach(tweet => {
+                            // Add separator between sensitive and non-sensitive tweets
+                            if (!hasAddedSeparator && !tweet.possibly_sensitive && sortedTweets.some(t => t.possibly_sensitive)) {
+                                const separator = document.createElement('div');
+                                separator.style.borderTop = '2px solid #e1e8ed';
+                                separator.style.margin = '2rem 0';
+                                separator.style.position = 'relative';
+                                
+                                const label = document.createElement('span');
+                                label.textContent = 'Other Tweets';
+                                label.style.position = 'absolute';
+                                label.style.top = '-12px';
+                                label.style.left = '50%';
+                                label.style.transform = 'translateX(-50%)';
+                                label.style.backgroundColor = 'white';
+                                label.style.padding = '0 1rem';
+                                label.style.color = '#666';
+                                label.style.fontSize = '0.9rem';
+                                
+                                separator.appendChild(label);
+                                tweetsContainer.appendChild(separator);
+                                hasAddedSeparator = true;
+                            }
+                            
+                            const tweetElement = document.createElement('div');
+                            tweetElement.className = 'tweet';
+                            
+                            const date = new Date(tweet.created_at);
+                            const formattedDate = date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const sensitivityTag = tweet.possibly_sensitive
+                                ? '<span class="sensitivity-tag sensitive">Sensitive Content</span>'
+                                : '<span class="sensitivity-tag safe">Safe Content</span>';
+                            
+                            tweetElement.innerHTML = `
+                                <div class="tweet-text">${tweet.text}</div>
+                                <div class="tweet-metadata">
+                                    <div class="tweet-date">${formattedDate}</div>
+                                    ${sensitivityTag}
+                                </div>
+                            `;
+                            
+                            tweetsContainer.appendChild(tweetElement);
+                        });
+                        
+                        resultsContainer.classList.add('visible');
+                    }
+                    
+                } catch (error) {
+                    errorMessage.textContent = 'An error occurred while fetching the data. Please try again.';
+                    errorMessage.style.display = 'block';
+                } finally {
+                    submitButton.disabled = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
