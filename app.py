@@ -1,14 +1,17 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import os
-import csv
-from datetime import datetime
 
 app = Flask(__name__)
 
 # X API configuration
 X_API_BASE_URL = "https://api.x.com/2"
 X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAJdKzQEAAAAAeeOP3pFY3tcnqYXO2r0Dt%2BUgXBk%3DcNoKdr5vnVV47ST5LQHkc8ZPmhiyVN7EzyqKTgl52GllQi12v8"
+
+# Reddit API configuration
+REDDIT_CLIENT_ID = "YOUR_REDDIT_CLIENT_ID"
+REDDIT_CLIENT_SECRET = "YOUR_REDDIT_CLIENT_SECRET"
+REDDIT_USER_AGENT = "Scrubmeta/1.0"
 
 def get_x_user_id(username):
     """Get X user ID from username using X API v2"""
@@ -54,31 +57,70 @@ def get_x_user_tweets(user_id):
         
     return response.json()
 
-def save_tweets_to_csv(username, tweets_data):
-    """Save tweets to a CSV file in the data/tweets directory"""
-    if not tweets_data or 'data' not in tweets_data:
-        return None
-        
-    filename = f"data/tweets/{username}.csv"
+def get_reddit_user_data(username):
+    """Get user's posts and comments from Reddit"""
+    headers = {
+        "User-Agent": REDDIT_USER_AGENT
+    }
     
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    
-    # Write tweets to CSV
-    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['tweet_id', 'created_at', 'text', 'possibly_sensitive']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    # Reddit's API doesn't require authentication for public data
+    try:
+        # Get user's submissions (posts)
+        posts_response = requests.get(
+            f"https://www.reddit.com/user/{username}/submitted/.json",
+            headers=headers,
+            params={"limit": 50}
+        )
         
-        writer.writeheader()
-        for tweet in tweets_data['data']:
-            writer.writerow({
-                'tweet_id': tweet.get('id', ''),
-                'created_at': tweet.get('created_at', ''),
-                'text': tweet.get('text', ''),
-                'possibly_sensitive': tweet.get('possibly_sensitive', False)
+        # Get user's comments
+        comments_response = requests.get(
+            f"https://www.reddit.com/user/{username}/comments/.json",
+            headers=headers,
+            params={"limit": 50}
+        )
+        
+        if posts_response.status_code != 200 or comments_response.status_code != 200:
+            return None
+            
+        posts_data = posts_response.json()
+        comments_data = comments_response.json()
+        
+        # Combine and format the data
+        combined_data = []
+        
+        # Process posts
+        for post in posts_data.get('data', {}).get('children', []):
+            post_data = post['data']
+            combined_data.append({
+                'id': post_data.get('id'),
+                'created_at': post_data.get('created_utc'),
+                'text': post_data.get('title') + '\n' + (post_data.get('selftext') or ''),
+                'type': 'post',
+                'subreddit': post_data.get('subreddit'),
+                'score': post_data.get('score'),
+                'possibly_sensitive': post_data.get('over_18', False)
             })
-    
-    return filename
+            
+        # Process comments
+        for comment in comments_data.get('data', {}).get('children', []):
+            comment_data = comment['data']
+            combined_data.append({
+                'id': comment_data.get('id'),
+                'created_at': comment_data.get('created_utc'),
+                'text': comment_data.get('body'),
+                'type': 'comment',
+                'subreddit': comment_data.get('subreddit'),
+                'score': comment_data.get('score'),
+                'possibly_sensitive': False  # Comments don't have NSFW flag
+            })
+            
+        return {
+            'data': sorted(combined_data, key=lambda x: x['created_at'], reverse=True)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching Reddit data: {e}")
+        return None
 
 @app.route('/')
 def home():
@@ -91,6 +133,7 @@ def lookup():
 @app.route('/api/fetch-data', methods=['POST'])
 def fetch_data():
     data = request.json
+    response_data = {}
     
     if 'x' in data:
         x_username = data['x']
@@ -109,17 +152,25 @@ def fetch_data():
                 'error': 'Could not fetch X tweets'
             }), 404
             
-        # Save tweets to CSV
-        csv_file = save_tweets_to_csv(x_username, tweets)
+        response_data['x_data'] = tweets
         
-        return jsonify({
-            'x_data': tweets,
-            'csv_file': os.path.basename(csv_file) if csv_file else None
-        })
+    if 'reddit' in data:
+        reddit_username = data['reddit']
+        reddit_data = get_reddit_user_data(reddit_username)
+        
+        if not reddit_data:
+            return jsonify({
+                'error': 'Could not fetch Reddit data'
+            }), 404
+            
+        response_data['reddit_data'] = reddit_data
     
-    return jsonify({
-        'error': 'No X username provided'
-    }), 400
+    if not response_data:
+        return jsonify({
+            'error': 'No username provided'
+        }), 400
+        
+    return jsonify(response_data)
 
 if __name__ == '__main__':
     app.run(debug=True)

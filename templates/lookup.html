@@ -280,13 +280,18 @@
         }
 
         .error-alert {
-            background-color: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #991b1b;
+            background-color: #ffebee;
+            border: 1px solid #ef9a9a;
+            border-radius: 8px;
             padding: 1rem;
-            border-radius: 6px;
-            margin: 1rem 0;
+            margin-bottom: 1rem;
+            color: #c62828;
             display: none;
+        }
+
+        .error-alert.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         .auth-required-message {
@@ -303,19 +308,55 @@
             font-size: 0.95rem;
         }
 
-        .success-message {
-            background-color: #e8f5e9;
-            border: 1px solid #81c784;
-            border-radius: 8px;
+        .reddit-content {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e1e8ed;
+        }
+        
+        .reddit-post, .reddit-comment {
+            background: #fff;
+            border: 1px solid #e1e8ed;
+            border-radius: 12px;
             padding: 1rem;
             margin-bottom: 1rem;
-            color: #2e7d32;
-            display: none;
+            transition: all 0.2s ease;
         }
-
-        .success-message.visible {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        
+        .reddit-post:hover, .reddit-comment:hover {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reddit-metadata {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .reddit-subreddit {
+            color: #ff4500;
+            font-weight: 500;
+        }
+        
+        .reddit-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .type-post {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .type-comment {
+            background-color: #e3f2fd;
+            color: #1565c0;
         }
 
         @keyframes fadeIn {
@@ -370,25 +411,23 @@
                     <input type="checkbox" id="x" name="platform" value="x" onchange="toggleInput('x')">
                     <label for="x">X</label>
                 </div>
+                <div class="platform-checkbox">
+                    <input type="checkbox" id="reddit" name="platform" value="reddit" onchange="toggleInput('reddit')">
+                    <label for="reddit">Reddit</label>
+                </div>
             </div>
 
             <div id="username-inputs">
-                <div id="instagram-input" class="platform-input">
-                    <label for="instagram-username">Instagram Username</label>
-                    <input type="text" id="instagram-username" name="instagram-username" placeholder="Enter your Instagram username">
-                    <div class="error-message">Please enter your Instagram username</div>
-                </div>
-
-                <div id="facebook-input" class="platform-input">
-                    <label for="facebook-username">Facebook Username</label>
-                    <input type="text" id="facebook-username" name="facebook-username" placeholder="Enter your Facebook username">
-                    <div class="error-message">Please enter your Facebook username</div>
-                </div>
-
                 <div id="x-input" class="platform-input">
                     <label for="x-username">X Username</label>
                     <input type="text" id="x-username" name="x-username" placeholder="Enter your X username">
                     <div class="error-message">Please enter your X username</div>
+                </div>
+
+                <div id="reddit-input" class="platform-input">
+                    <label for="reddit-username">Reddit Username</label>
+                    <input type="text" id="reddit-username" name="reddit-username" placeholder="Enter your Reddit username">
+                    <div class="error-message">Please enter your Reddit username</div>
                 </div>
 
                 <button id="submit-button" class="submit-button" onclick="handleSubmit()">
@@ -397,7 +436,6 @@
 
                 <div id="error-message" class="error-alert"></div>
                 
-                <div id="success-message" class="success-message"></div>
                 <div id="results-container" class="results-container">
                     <h3>Historical Activity</h3>
                     <div id="tweets-container"></div>
@@ -429,7 +467,7 @@
 
         function validateForm() {
             let isValid = true;
-            const platforms = ['x']; // Only check X since others are disabled
+            const platforms = ['x', 'reddit']; // Check X and Reddit
             
             // Reset all error states
             platforms.forEach(platform => {
@@ -462,17 +500,15 @@
                 const submitButton = document.getElementById('submit-button');
                 const errorMessage = document.getElementById('error-message');
                 const resultsContainer = document.getElementById('results-container');
-                const successMessage = document.getElementById('success-message');
                 
                 // Disable button and hide previous results/errors
                 submitButton.disabled = true;
                 errorMessage.style.display = 'none';
                 resultsContainer.classList.remove('visible');
-                successMessage.classList.remove('visible');
                 
                 // Collect the data from selected platforms
                 const data = {};
-                ['x'].forEach(platform => {
+                ['x', 'reddit'].forEach(platform => {
                     const checkbox = document.querySelector(`input[value="${platform}"]`);
                     if (checkbox.checked) {
                         data[platform] = document.getElementById(`${platform}-username`).value.trim();
@@ -499,23 +535,15 @@
                     
                     if (result.x_data && result.x_data.data) {
                         const tweetsContainer = document.getElementById('tweets-container');
-                        tweetsContainer.innerHTML = ''; // Clear previous results
-                        
-                        // Show CSV success message if file was created
-                        if (result.csv_file) {
-                            successMessage.textContent = `Tweets have been saved to CSV file`;
-                            successMessage.classList.add('visible');
-                        } else {
-                            successMessage.classList.remove('visible');
-                        }
+                        tweetsContainer.innerHTML = '<h3>X (Twitter) Activity</h3>'; // Clear and add header
                         
                         // Sort tweets: sensitive ones first, then others
                         const sortedTweets = [...result.x_data.data].sort((a, b) => {
                             if (a.possibly_sensitive && !b.possibly_sensitive) return -1;
                             if (!a.possibly_sensitive && b.possibly_sensitive) return 1;
-                            return new Date(b.created_at) - new Date(a.created_at); // Secondary sort by date
+                            return new Date(b.created_at) - new Date(a.created_at);
                         });
-
+                        
                         // Add a separator if there are sensitive tweets
                         let hasAddedSeparator = false;
                         
@@ -554,7 +582,7 @@
                                 hour: '2-digit',
                                 minute: '2-digit'
                             });
-
+                            
                             const sensitivityTag = tweet.possibly_sensitive
                                 ? '<span class="sensitivity-tag sensitive">Sensitive Content</span>'
                                 : '<span class="sensitivity-tag safe">Safe Content</span>';
@@ -569,10 +597,87 @@
                             
                             tweetsContainer.appendChild(tweetElement);
                         });
-                        
-                        resultsContainer.classList.add('visible');
                     }
                     
+                    if (result.reddit_data && result.reddit_data.data) {
+                        const redditContainer = document.createElement('div');
+                        redditContainer.className = 'reddit-content';
+                        redditContainer.innerHTML = '<h3>Reddit Activity</h3>';
+                        
+                        // Sort Reddit content: sensitive first, then by date
+                        const sortedContent = [...result.reddit_data.data].sort((a, b) => {
+                            if (a.possibly_sensitive && !b.possibly_sensitive) return -1;
+                            if (!a.possibly_sensitive && b.possibly_sensitive) return 1;
+                            return b.created_at - a.created_at;
+                        });
+                        
+                        // Add a separator if there are sensitive posts
+                        let hasAddedSeparator = false;
+                        
+                        sortedContent.forEach(item => {
+                            // Add separator between sensitive and non-sensitive content
+                            if (!hasAddedSeparator && !item.possibly_sensitive && sortedContent.some(t => t.possibly_sensitive)) {
+                                const separator = document.createElement('div');
+                                separator.style.borderTop = '2px solid #e1e8ed';
+                                separator.style.margin = '2rem 0';
+                                separator.style.position = 'relative';
+                                
+                                const label = document.createElement('span');
+                                label.textContent = 'Other Content';
+                                label.style.position = 'absolute';
+                                label.style.top = '-12px';
+                                label.style.left = '50%';
+                                label.style.transform = 'translateX(-50%)';
+                                label.style.backgroundColor = 'white';
+                                label.style.padding = '0 1rem';
+                                label.style.color = '#666';
+                                label.style.fontSize = '0.9rem';
+                                
+                                separator.appendChild(label);
+                                redditContainer.appendChild(separator);
+                                hasAddedSeparator = true;
+                            }
+                            
+                            const itemElement = document.createElement('div');
+                            itemElement.className = item.type === 'post' ? 'reddit-post' : 'reddit-comment';
+                            
+                            const date = new Date(item.created_at * 1000);
+                            const formattedDate = date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            
+                            const sensitivityTag = item.possibly_sensitive
+                                ? '<span class="sensitivity-tag sensitive">Sensitive Content</span>'
+                                : '<span class="sensitivity-tag safe">Safe Content</span>';
+                                
+                            const typeTag = `<span class="reddit-type type-${item.type}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span>`;
+                            
+                            itemElement.innerHTML = `
+                                <div class="reddit-text">${item.text}</div>
+                                <div class="reddit-metadata">
+                                    <div>
+                                        <span class="reddit-subreddit">r/${item.subreddit}</span>
+                                        ${typeTag}
+                                    </div>
+                                    <div>
+                                        <span class="reddit-score">Score: ${item.score}</span>
+                                        <span class="reddit-date">${formattedDate}</span>
+                                        ${sensitivityTag}
+                                    </div>
+                                </div>
+                            `;
+                            
+                            redditContainer.appendChild(itemElement);
+                        });
+                        
+                        document.getElementById('tweets-container').appendChild(redditContainer);
+                    }
+                    
+                    resultsContainer.classList.add('visible');
                 } catch (error) {
                     errorMessage.textContent = 'An error occurred while fetching the data. Please try again.';
                     errorMessage.style.display = 'block';
