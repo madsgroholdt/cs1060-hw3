@@ -15,7 +15,7 @@ X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAJdKzQEAAAAAeeOP3pFY3tcnqYXO2r0Dt%2BUgXBk%
 # Reddit API configuration
 REDDIT_CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID', 'YOUR_REDDIT_CLIENT_ID')
 REDDIT_CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET', 'YOUR_REDDIT_CLIENT_SECRET')
-REDDIT_USER_AGENT = os.environ.get('REDDIT_USER_AGENT', 'Scrubmeta/1.0 (by /u/This_Speech5109)')
+REDDIT_USER_AGENT = os.environ.get('REDDIT_USER_AGENT', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36 madsgroholdt')
 
 def analyze_sentiment(text):
     """Analyze text sentiment and return if it's strongly negative (score > 0.9)"""
