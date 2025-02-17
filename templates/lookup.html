@@ -371,10 +371,17 @@
             padding: 1rem;
             margin-bottom: 1rem;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         .reddit-post:hover, .reddit-comment:hover {
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .reddit-post a, .reddit-comment a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .reddit-metadata {
@@ -930,17 +937,19 @@
                                     : '<span class="sensitivity-tag safe">Neutral/Positive Content</span>';
                                 
                                 postElement.innerHTML = `
-                                    <div class="reddit-text">${post.text}</div>
-                                    <div class="reddit-metadata">
-                                        <div>
-                                            <span class="reddit-subreddit">r/${post.subreddit}</span>
+                                    <a href="${post.url}" target="_blank" rel="noopener noreferrer">
+                                        <div class="reddit-text">${post.text}</div>
+                                        <div class="reddit-metadata">
+                                            <div>
+                                                <span class="reddit-subreddit">r/${post.subreddit}</span>
+                                            </div>
+                                            <div>
+                                                <span class="reddit-score">Score: ${post.score}</span>
+                                                <span class="reddit-date">${formattedDate}</span>
+                                                ${sensitivityTag}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span class="reddit-score">Score: ${post.score}</span>
-                                            <span class="reddit-date">${formattedDate}</span>
-                                            ${sensitivityTag}
-                                        </div>
-                                    </div>
+                                    </a>
                                 `;
                                 
                                 postsSection.appendChild(postElement);
@@ -994,17 +1003,19 @@
                                     : '<span class="sensitivity-tag safe">Neutral/Positive Content</span>';
                                 
                                 commentElement.innerHTML = `
-                                    <div class="reddit-text">${comment.text}</div>
-                                    <div class="reddit-metadata">
-                                        <div>
-                                            <span class="reddit-subreddit">r/${comment.subreddit}</span>
+                                    <a href="${comment.url}" target="_blank" rel="noopener noreferrer">
+                                        <div class="reddit-text">${comment.text}</div>
+                                        <div class="reddit-metadata">
+                                            <div>
+                                                <span class="reddit-subreddit">r/${comment.subreddit}</span>
+                                            </div>
+                                            <div>
+                                                <span class="reddit-score">Score: ${comment.score}</span>
+                                                <span class="reddit-date">${formattedDate}</span>
+                                                ${sensitivityTag}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span class="reddit-score">Score: ${comment.score}</span>
-                                            <span class="reddit-date">${formattedDate}</span>
-                                            ${sensitivityTag}
-                                        </div>
-                                    </div>
+                                    </a>
                                 `;
                                 
                                 commentsSection.appendChild(commentElement);

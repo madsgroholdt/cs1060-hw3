@@ -122,7 +122,8 @@ def get_reddit_user_data(username):
                 'type': 'post',
                 'subreddit': post_data.get('subreddit'),
                 'score': post_data.get('score'),
-                'possibly_sensitive': is_negative
+                'possibly_sensitive': is_negative,
+                'url': f"https://www.reddit.com{post_data.get('permalink')}"
             })
             
         # Process comments
@@ -132,7 +133,7 @@ def get_reddit_user_data(username):
             
             # Use sentiment analysis for comments too
             is_negative = analyze_sentiment(text)
-            
+                
             combined_data.append({
                 'id': comment_data.get('id'),
                 'created_at': comment_data.get('created_utc'),
@@ -140,7 +141,8 @@ def get_reddit_user_data(username):
                 'type': 'comment',
                 'subreddit': comment_data.get('subreddit'),
                 'score': comment_data.get('score'),
-                'possibly_sensitive': is_negative
+                'possibly_sensitive': is_negative,
+                'url': f"https://www.reddit.com{comment_data.get('permalink')}"
             })
             
         return {
