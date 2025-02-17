@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import os
+from transformers import pipeline
 
 app = Flask(__name__)
+
+# Initialize sentiment analysis pipeline
+sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
 # X API configuration
 X_API_BASE_URL = "https://api.x.com/2"
@@ -12,6 +16,15 @@ X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAJdKzQEAAAAAeeOP3pFY3tcnqYXO2r0Dt%2BUgXBk%
 REDDIT_CLIENT_ID = "YOUR_REDDIT_CLIENT_ID"
 REDDIT_CLIENT_SECRET = "YOUR_REDDIT_CLIENT_SECRET"
 REDDIT_USER_AGENT = "Scrubmeta/1.0"
+
+def analyze_sentiment(text):
+    """Analyze text sentiment and return if it's strongly negative (score > 0.9)"""
+    try:
+        result = sentiment_analyzer(text)
+        return result[0]['label'] == 'NEGATIVE' and result[0]['score'] > 0.999
+    except Exception as e:
+        print(f"Error analyzing sentiment: {e}")
+        return False
 
 def get_x_user_id(username):
     """Get X user ID from username using X API v2"""
@@ -48,14 +61,21 @@ def get_x_user_tweets(user_id):
         headers=headers,
         params={
             "max_results": 100,
-            "tweet.fields": "created_at,text,possibly_sensitive"
+            "tweet.fields": "created_at,text"
         }
     )
     print("Response:", response.json())
     if response.status_code != 200:
         return None
         
-    return response.json()
+    tweets_data = response.json()
+    
+    # Add sentiment analysis to tweets
+    if 'data' in tweets_data:
+        for tweet in tweets_data['data']:
+            tweet['possibly_sensitive'] = analyze_sentiment(tweet['text'])
+    
+    return tweets_data
 
 def get_reddit_user_data(username):
     """Get user's posts and comments from Reddit"""
@@ -63,7 +83,6 @@ def get_reddit_user_data(username):
         "User-Agent": REDDIT_USER_AGENT
     }
     
-    # Reddit's API doesn't require authentication for public data
     try:
         # Get user's submissions (posts)
         posts_response = requests.get(
@@ -91,27 +110,37 @@ def get_reddit_user_data(username):
         # Process posts
         for post in posts_data.get('data', {}).get('children', []):
             post_data = post['data']
+            text = post_data.get('title', '') + '\n' + (post_data.get('selftext') or '')
+            
+            # Use sentiment analysis instead of over_18 flag
+            is_negative = analyze_sentiment(text)
+            
             combined_data.append({
                 'id': post_data.get('id'),
                 'created_at': post_data.get('created_utc'),
-                'text': post_data.get('title') + '\n' + (post_data.get('selftext') or ''),
+                'text': text,
                 'type': 'post',
                 'subreddit': post_data.get('subreddit'),
                 'score': post_data.get('score'),
-                'possibly_sensitive': post_data.get('over_18', False)
+                'possibly_sensitive': is_negative
             })
             
         # Process comments
         for comment in comments_data.get('data', {}).get('children', []):
             comment_data = comment['data']
+            text = comment_data.get('body', '')
+            
+            # Use sentiment analysis for comments too
+            is_negative = analyze_sentiment(text)
+            
             combined_data.append({
                 'id': comment_data.get('id'),
                 'created_at': comment_data.get('created_utc'),
-                'text': comment_data.get('body'),
+                'text': text,
                 'type': 'comment',
                 'subreddit': comment_data.get('subreddit'),
                 'score': comment_data.get('score'),
-                'possibly_sensitive': False  # Comments don't have NSFW flag
+                'possibly_sensitive': is_negative
             })
             
         return {
