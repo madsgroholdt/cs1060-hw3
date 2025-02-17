@@ -2,7 +2,7 @@
 
 A powerful web application for analyzing social media content across X (formerly Twitter) and Reddit platforms. Scrubmeta helps users analyze social media posts and comments using advanced sentiment analysis.
 
-## Features
+## Features on the Application
 
 - **Multi-Platform Analysis**: Fetch and analyze content from both X and Reddit
 - **Sentiment Analysis**: Uses DistilBERT model to identify potentially sensitive or negative content
