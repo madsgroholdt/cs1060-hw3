@@ -78,30 +78,58 @@ def get_x_user_tweets(user_id):
     
     return tweets_data
 
+def get_reddit_access_token():
+    """Get Reddit OAuth access token"""
+    auth = requests.auth.HTTPBasicAuth(REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET)
+    headers = {'User-Agent': REDDIT_USER_AGENT}
+    data = {
+        'grant_type': 'client_credentials'
+    }
+    
+    try:
+        response = requests.post(
+            'https://www.reddit.com/api/v1/access_token',
+            auth=auth,
+            data=data,
+            headers=headers
+        )
+        if response.status_code == 200:
+            return response.json().get('access_token')
+        else:
+            print(f"Error getting Reddit access token: {response.status_code}")
+            print(f"Response: {response.text[:200]}")
+            return None
+    except Exception as e:
+        print(f"Exception getting Reddit access token: {e}")
+        return None
+
 def get_reddit_user_data(username):
     """Get user's posts and comments from Reddit"""
+    access_token = get_reddit_access_token()
+    if not access_token:
+        return None
+        
     headers = {
-        "User-Agent": REDDIT_USER_AGENT,
-        "Accept": "application/json",
-        "Connection": "keep-alive"
+        'User-Agent': REDDIT_USER_AGENT,
+        'Authorization': f'Bearer {access_token}'
     }
     
     try:
         # Get user's submissions (posts)
         posts_response = requests.get(
-            f"https://old.reddit.com/user/{username}/submitted/.json",
+            f'https://oauth.reddit.com/user/{username}/submitted',
             headers=headers,
-            params={"limit": 50, "raw_json": 1}
+            params={'limit': 50}
         )
         
-        # Add a small delay between requests to avoid rate limiting
+        # Add a small delay between requests
         time.sleep(1)
         
         # Get user's comments
         comments_response = requests.get(
-            f"https://old.reddit.com/user/{username}/comments/.json",
+            f'https://oauth.reddit.com/user/{username}/comments',
             headers=headers,
-            params={"limit": 50, "raw_json": 1}
+            params={'limit': 50}
         )
         
         if posts_response.status_code != 200 or comments_response.status_code != 200:
