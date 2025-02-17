@@ -13,9 +13,9 @@ X_API_BASE_URL = "https://api.x.com/2"
 X_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAJdKzQEAAAAAeeOP3pFY3tcnqYXO2r0Dt%2BUgXBk%3DcNoKdr5vnVV47ST5LQHkc8ZPmhiyVN7EzyqKTgl52GllQi12v8"
 
 # Reddit API configuration
-REDDIT_CLIENT_ID = "YOUR_REDDIT_CLIENT_ID"
-REDDIT_CLIENT_SECRET = "YOUR_REDDIT_CLIENT_SECRET"
-REDDIT_USER_AGENT = "Scrubmeta/1.0"
+REDDIT_CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID', 'YOUR_REDDIT_CLIENT_ID')
+REDDIT_CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET', 'YOUR_REDDIT_CLIENT_SECRET')
+REDDIT_USER_AGENT = os.environ.get('REDDIT_USER_AGENT', 'Scrubmeta/1.0')
 
 def analyze_sentiment(text):
     """Analyze text sentiment and return if it's strongly negative (score > 0.9)"""
@@ -99,6 +99,9 @@ def get_reddit_user_data(username):
         )
         
         if posts_response.status_code != 200 or comments_response.status_code != 200:
+            print(f"Reddit API Error - Posts Status: {posts_response.status_code}, Comments Status: {comments_response.status_code}")
+            print(f"Posts Response: {posts_response.text[:200]}")
+            print(f"Comments Response: {comments_response.text[:200]}")
             return None
             
         posts_data = posts_response.json()
