@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import os
+import time
 from transformers import pipeline
 
 app = Flask(__name__)
@@ -80,22 +81,27 @@ def get_x_user_tweets(user_id):
 def get_reddit_user_data(username):
     """Get user's posts and comments from Reddit"""
     headers = {
-        "User-Agent": REDDIT_USER_AGENT
+        "User-Agent": REDDIT_USER_AGENT,
+        "Accept": "application/json",
+        "Connection": "keep-alive"
     }
     
     try:
         # Get user's submissions (posts)
         posts_response = requests.get(
-            f"https://www.reddit.com/user/{username}/submitted/.json",
+            f"https://old.reddit.com/user/{username}/submitted/.json",
             headers=headers,
-            params={"limit": 50}
+            params={"limit": 50, "raw_json": 1}
         )
+        
+        # Add a small delay between requests to avoid rate limiting
+        time.sleep(1)
         
         # Get user's comments
         comments_response = requests.get(
-            f"https://www.reddit.com/user/{username}/comments/.json",
+            f"https://old.reddit.com/user/{username}/comments/.json",
             headers=headers,
-            params={"limit": 50}
+            params={"limit": 50, "raw_json": 1}
         )
         
         if posts_response.status_code != 200 or comments_response.status_code != 200:
@@ -126,7 +132,7 @@ def get_reddit_user_data(username):
                 'subreddit': post_data.get('subreddit'),
                 'score': post_data.get('score'),
                 'possibly_sensitive': is_negative,
-                'url': f"https://www.reddit.com{post_data.get('permalink')}"
+                'url': f"https://old.reddit.com{post_data.get('permalink')}"
             })
             
         # Process comments
@@ -145,7 +151,7 @@ def get_reddit_user_data(username):
                 'subreddit': comment_data.get('subreddit'),
                 'score': comment_data.get('score'),
                 'possibly_sensitive': is_negative,
-                'url': f"https://www.reddit.com{comment_data.get('permalink')}"
+                'url': f"https://old.reddit.com{comment_data.get('permalink')}"
             })
             
         return {
